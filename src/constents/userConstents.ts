@@ -1,1 +1,1 @@
-export   const Salt=10
+export const Salt = 10;
