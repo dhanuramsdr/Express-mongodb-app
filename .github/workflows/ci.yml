@@ -10,8 +10,8 @@ env:
   # These are public values (can be visible)
   DOCKER_TAG: latest
   # Use GitHub Variables for non-secret values (Settings -> Secrets and variables -> Actions -> Variables)
-  DOCKER_IMAGE: ${{ vars.DOCKER_IMAGE || 'your-dockerhub-username/express-ts-mongodb-api' }}
-  SONAR_PROJECT: ${{ vars.SONAR_PROJECT || 'express-ts-mongodb-api' }}
+  DOCKER_IMAGE: ${vars.DOCKER_IMAGE}
+  SONAR_PROJECT: ${vars.SONAR_PROJECT}
 
 jobs:
   # Code Quality & Security Scan
@@ -26,8 +26,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: '20'
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
@@ -57,8 +57,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: '20'
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
@@ -106,7 +106,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: "npm"
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
@@ -143,8 +143,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: '20'
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
@@ -217,11 +217,11 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ vars.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
-          format: "sarif"
-          output: "trivy-results.sarif"
-          severity: "CRITICAL,HIGH"
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
 
       - name: Upload Trivy results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: "trivy-results.sarif"
+          sarif_file: 'trivy-results.sarif'
