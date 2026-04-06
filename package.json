@@ -5,7 +5,11 @@
   "scripts": {
     "dev": "nodemon src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write .",
+    "test": "jest --coverage",
+    "test:integration": "jest --config jest.integration.config.js || true"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
