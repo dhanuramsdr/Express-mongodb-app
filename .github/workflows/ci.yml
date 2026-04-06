@@ -10,8 +10,8 @@ env:
   # These are public values (can be visible)
   DOCKER_TAG: latest
   # Use GitHub Variables for non-secret values (Settings -> Secrets and variables -> Actions -> Variables)
-  DOCKER_IMAGE: ${vars.DOCKER_IMAGE}
-  SONAR_PROJECT: ${vars.SONAR_PROJECT}
+  DOCKER_IMAGE: ${{vars.DOCKER_IMAGE}}
+  SONAR_PROJECT: ${{vars.SONAR_PROJECT}}
 
 jobs:
   # Code Quality & Security Scan
