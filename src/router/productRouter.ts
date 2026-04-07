@@ -1,6 +1,6 @@
-import Router from 'express'
-import { addProduct } from '../controllers/productController'
+import Router from 'express';
+import { addProduct } from '../controllers/productController';
 
-export const productRouter=Router()
+export const productRouter = Router();
 
-productRouter.route('/creatproduct').post(addProduct)
+productRouter.route('/creatproduct').post(addProduct);

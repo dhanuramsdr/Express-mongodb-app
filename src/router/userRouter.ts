@@ -1,9 +1,9 @@
-import Router from 'express'
-import { getUserDetails, loginUser, registerUser } from '../controllers/userController'
+import Router from 'express';
+import { getUserDetails, loginUser, registerUser } from '../controllers/userController';
 import { autherizationToken } from '../utilits/jwtUtilit';
 
-export const userRouter=Router()
+export const userRouter = Router();
 
 userRouter.route('/register').post(registerUser);
 userRouter.route('/login').post(loginUser);
-userRouter.route('/getuserprofile').get(autherizationToken,getUserDetails);
+userRouter.route('/getuserprofile').get(autherizationToken, getUserDetails);

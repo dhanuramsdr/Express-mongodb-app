@@ -27,10 +27,9 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
       message: 'register successfully',
     });
   } catch (error) {
-    console.log(error);
-
     res.status(500).json({
       message: 'unhandled network error',
+      error,
     });
   }
 };
@@ -66,8 +65,6 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     });
     return;
   } catch (error) {
-    console.log(error);
-
     res.status(500).json({
       message: 'internal server error',
       error,
@@ -96,9 +93,9 @@ export const getUserDetails = async (req: Authrequest, res: Response): Promise<v
       data: userDetails,
     });
   } catch (error) {
-    console.error('Error fetching user details:', error);
     res.status(500).json({
       message: 'Internal server error',
+      error,
     });
   }
 };
