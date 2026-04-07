@@ -80,10 +80,18 @@ jobs:
       - name: Run tests with coverage
         run: npm test
         env:
-          # These override .env file for this specific command
           NODE_ENV: test
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
+      - name: Debug SonarCloud Organization
+        run: |
+          echo "Fetching your SonarCloud organization..."
+          curl -s -X GET "https://sonarcloud.io/api/organizations/search" \
+            -H "Authorization: Bearer ${{ secrets.SONAR_TOKEN }}" \
+            -H "Content-Type: application/json" | python3 -m json.tool
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v5.0.0
@@ -91,11 +99,15 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.organization=dhanuramsdr
-            -Dsonar.projectKey=${{ vars.SONAR_PROJECT }}
+            -Dsonar.organization=dhunarusmdr
+            -Dsonar.projectKey=Express-mongodb-app
+            -Dsonar.sources=.
+            -Dsonar.tests=.
+            -Dsonar.test.inclusions=**/*.test.ts
+            -Dsonar.javascript.file.suffixes=.js,.jsx,.ts,.tsx
             -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info
-            -Dsonar.javascript.file.suffixes=.ts,.tsx
             -Dsonar.coverage.exclusions=**/*.test.ts,**/__tests__/**,**/server.ts
+
   code-review:
     name: Code Review & Quality Check
     runs-on: ubuntu-latest
@@ -161,7 +173,6 @@ jobs:
         run: npm test
         env:
           NODE_ENV: test
-          # Use local MongoDB for testing (not from .env)
           MONGODB_URI: mongodb://localhost:27017/test
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           PORT: ${{ vars.PORT }}
