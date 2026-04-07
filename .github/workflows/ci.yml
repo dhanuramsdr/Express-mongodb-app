@@ -99,7 +99,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.organization=dhunarusmdr
+            -Dsonar.organization=dhanuramsdr
             -Dsonar.projectKey=Express-mongodb-app
             -Dsonar.sources=.
             -Dsonar.tests=.
