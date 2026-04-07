@@ -80,25 +80,32 @@ jobs:
       - name: Run tests with coverage
         run: npm test
         env:
+          # These override .env file for this specific command
           NODE_ENV: test
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
-
+      - name: Debug SonarQube variables
+        run: |
+          echo "=========================================="
+          echo "SONAR_ORG (secret): '${SONAR_ORG}'"
+          echo "SONAR_PROJECT (var): '${SONAR_PROJECT}'"
+          echo "SONAR_TOKEN exists: ${SONAR_TOKEN:+YES}"
+          echo "=========================================="
+        env:
+          SONAR_ORG: ${{ secrets.SONAR_ORG }}
+          SONAR_PROJECT: ${{ vars.SONAR_PROJECT }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v5.0.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.projectKey=Express-mongodb-app
             -Dsonar.organization=${{ secrets.SONAR_ORG }}
-            -Dsonar.sources=.
-            -Dsonar.tests=.
-            -Dsonar.test.inclusions=**/*.test.ts
-            -Dsonar.javascript.file.suffixes=.js,.jsx,.ts,.tsx
+            -Dsonar.projectKey=${{ vars.SONAR_PROJECT }}
             -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.javascript.file.suffixes=.ts,.tsx
             -Dsonar.coverage.exclusions=**/*.test.ts,**/__tests__/**,**/server.ts
-
   code-review:
     name: Code Review & Quality Check
     runs-on: ubuntu-latest
@@ -164,6 +171,7 @@ jobs:
         run: npm test
         env:
           NODE_ENV: test
+          # Use local MongoDB for testing (not from .env)
           MONGODB_URI: mongodb://localhost:27017/test
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           PORT: ${{ vars.PORT }}
@@ -234,7 +242,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ env.DOCKER_IMAGE }}:v1
+          tags: ${{ env.DOCKER_IMAGE }}:latest
           build-args: |
             PORT=${{ vars.PORT }}
             NODE_ENV=production
