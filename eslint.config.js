@@ -8,6 +8,7 @@ export default [
   js.configs.recommended,
   {
     files: ['**/*.ts', '**/*.tsx'],
+    ignores: ['dist/**', 'node_modules/**', 'coverage/**'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -16,32 +17,34 @@ export default [
         project: './tsconfig.json',
       },
       globals: {
-        ...globals.node, // Node.js globals
-        ...globals.jest, // ✅ Jest globals (describe, it, expect, etc.)
+        ...globals.node,
+        ...globals.jest, // This adds describe, it, expect, afterAll, etc.
       },
     },
     plugins: {
       '@typescript-eslint': ts,
     },
     rules: {
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
-      // Allow console in Node.js files (or restrict as needed)
-      'no-console': ['warn', { allow: ['error', 'warn', 'log', 'info'] }],
+      'no-console': ['warn', { allow: ['error', 'warn'] }],
     },
   },
   {
-    files: ['**/*.test.ts', '**/*.spec.ts'],
+    // Special rules for test files
+    files: ['**/*.test.ts', '**/*.spec.ts', '**/__tests__/**/*.ts'],
     rules: {
-      ...globals.jest,
-    },
-  },
-  {
-    // Special rules for database connection file
-    files: ['src/db/**/*.ts'],
-    rules: {
-      'no-console': 'off', // Allow console in DB files
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      'no-console': 'off',
     },
   },
 ];
