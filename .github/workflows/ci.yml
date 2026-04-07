@@ -7,12 +7,11 @@ on:
     branches: [main]
   schedule:
     - cron: '0 0 * * 1'
-  workflow_dispatch: # Allow manual trigger
+  workflow_dispatch:
 
 env:
   DOCKER_IMAGE: ${{ vars.DOCKER_IMAGE }}
   DOCKER_TAG: ${{ vars.DOCKER_TAG }}
-  # Set common env vars for all jobs
   NODE_ENV: test
   PORT: ${{ vars.PORT }}
 
@@ -84,14 +83,17 @@ jobs:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
-      - name: Debug SonarCloud Organization
+      - name: Verify coverage report exists
         run: |
-          echo "Fetching your SonarCloud organization..."
-          curl -s -X GET "https://sonarcloud.io/api/organizations/search" \
-            -H "Authorization: Bearer ${{ secrets.SONAR_TOKEN }}" \
-            -H "Content-Type: application/json" | python3 -m json.tool
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          if [ -f coverage/lcov.info ]; then
+            echo "✅ Coverage report found"
+            echo "First 5 lines of coverage report:"
+            head -5 coverage/lcov.info
+          else
+            echo "⚠️ No coverage report found at coverage/lcov.info"
+            echo "Listing coverage directory contents:"
+            ls -la coverage/ || echo "Coverage directory not found"
+          fi
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v5.0.0
@@ -101,12 +103,14 @@ jobs:
           args: >
             -Dsonar.organization=dhanuramsdr
             -Dsonar.projectKey=Express-mongodb-app
-            -Dsonar.sources=.
-            -Dsonar.tests=.
-            -Dsonar.test.inclusions=**/*.test.ts
+            -Dsonar.projectName=Express-mongodb-app
+            -Dsonar.sources=src
+            -Dsonar.tests=tests
+            -Dsonar.test.inclusions=**/*.test.ts,**/*.spec.ts
             -Dsonar.javascript.file.suffixes=.js,.jsx,.ts,.tsx
             -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info
-            -Dsonar.coverage.exclusions=**/*.test.ts,**/__tests__/**,**/server.ts
+            -Dsonar.coverage.exclusions=**/*.test.ts,**/*.spec.ts,**/__tests__/**,**/server.ts,**/index.ts
+            -Dsonar.exclusions=node_modules/**,dist/**,coverage/**,.git/**
 
   code-review:
     name: Code Review & Quality Check
