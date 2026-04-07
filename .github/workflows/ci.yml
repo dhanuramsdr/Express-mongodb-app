@@ -91,7 +91,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.organization=dhunaramsdr
+            -Dsonar.organization=dhanuramsdr
             -Dsonar.projectKey=${{ vars.SONAR_PROJECT }}
             -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info
             -Dsonar.javascript.file.suffixes=.ts,.tsx
