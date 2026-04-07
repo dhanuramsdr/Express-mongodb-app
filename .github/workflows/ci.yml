@@ -6,14 +6,17 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: '0 0 * * 1' # Weekly security scan
+    - cron: '0 0 * * 1'
+  workflow_dispatch: # Allow manual trigger
 
 env:
   DOCKER_IMAGE: ${{ vars.DOCKER_IMAGE }}
   DOCKER_TAG: ${{ vars.DOCKER_TAG }}
+  # Set common env vars for all jobs
+  NODE_ENV: test
+  PORT: ${{ vars.PORT }}
 
 jobs:
-  # Security Scan (Separate job, non-blocking)
   security-scan:
     name: Security Vulnerabilities Scan
     runs-on: ubuntu-latest
@@ -25,6 +28,15 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+
+      - name: Create .env file for testing
+        run: |
+          cat << EOF > .env
+          NODE_ENV=test
+          PORT=${{ vars.PORT }}
+          MONGODB_URI=${{ secrets.MONGODB_URI }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          EOF
 
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
@@ -39,13 +51,6 @@ jobs:
           name: npm-audit-report
           path: audit-report.json
 
-      - name: Check for critical vulnerabilities
-        run: |
-          if grep -q '"severity":"critical"' audit-report.json; then
-            echo "::warning::Critical vulnerabilities found!"
-          fi
-
-  # SonarQube Analysis
   sonarqube:
     name: SonarQube Code Analysis
     runs-on: ubuntu-latest
@@ -60,11 +65,25 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      - name: Create .env file
+        run: |
+          cat << EOF > .env
+          NODE_ENV=test
+          PORT=${{ vars.PORT }}
+          MONGODB_URI=${{ secrets.MONGODB_URI }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          EOF
+
       - name: Install dependencies
         run: npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 
       - name: Run tests with coverage
         run: npm test
+        env:
+          # These override .env file for this specific command
+          NODE_ENV: test
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v5.0.0
@@ -73,12 +92,11 @@ jobs:
         with:
           args: >
             -Dsonar.organization=${{ secrets.SONAR_ORG }}
-            -Dsonar.projectKey=ExpressMongoDBApp
+            -Dsonar.projectKey=${{ vars.SONAR_PROJECT }}
             -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info
             -Dsonar.javascript.file.suffixes=.ts,.tsx
             -Dsonar.coverage.exclusions=**/*.test.ts,**/__tests__/**,**/server.ts
 
-  # Code Review & Linting (Without blocking security)
   code-review:
     name: Code Review & Quality Check
     runs-on: ubuntu-latest
@@ -90,6 +108,15 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+
+      - name: Create .env file
+        run: |
+          cat << EOF > .env
+          NODE_ENV=test
+          PORT=${{ vars.PORT }}
+          MONGODB_URI=${{ secrets.MONGODB_URI }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          EOF
 
       - name: Install dependencies
         run: npm ci --legacy-peer-deps || npm install --legacy-peer-deps
@@ -103,10 +130,6 @@ jobs:
       - name: Type Checking
         run: npx tsc --noEmit
 
-      - name: Dependency Check
-        run: npm outdated || true
-
-  # Tests
   test:
     name: Run Tests
     runs-on: ubuntu-latest
@@ -139,7 +162,10 @@ jobs:
         run: npm test
         env:
           NODE_ENV: test
+          # Use local MongoDB for testing (not from .env)
           MONGODB_URI: mongodb://localhost:27017/test
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          PORT: ${{ vars.PORT }}
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
@@ -147,7 +173,6 @@ jobs:
           name: coverage-report
           path: coverage/
 
-  # Build
   build:
     name: Build Application
     runs-on: ubuntu-latest
@@ -161,6 +186,15 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      - name: Create .env file for build
+        run: |
+          cat << EOF > .env
+          NODE_ENV=production
+          PORT=${{ vars.PORT }}
+          MONGODB_URI=${{ secrets.MONGODB_URI }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          EOF
+
       - name: Install dependencies
         run: npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 
@@ -170,12 +204,17 @@ jobs:
       - name: Verify build
         run: test -f dist/server.js || exit 1
 
-  # Docker Build (Only on main branch)
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
   docker:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
     needs: [build, sonarqube]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
 
     steps:
       - uses: actions/checkout@v4
@@ -195,5 +234,8 @@ jobs:
           context: .
           push: true
           tags: ${{ env.DOCKER_IMAGE }}:latest
+          build-args: |
+            PORT=${{ vars.PORT }}
+            NODE_ENV=production
           cache-from: type=gha
           cache-to: type=gha,mode=max
