@@ -1,11 +1,11 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import dot from 'dotenv';
+import dotenv from 'dotenv';
 import { dbConnection } from './db/dbConnection';
 import { allRouter } from './router/allRouter';
 import errorHandler from '../src/utilits/errorHandler';
 
-dot.config();
+dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
