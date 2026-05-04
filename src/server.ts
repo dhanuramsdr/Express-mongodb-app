@@ -3,6 +3,8 @@ import cors from 'cors';
 import dot from 'dotenv';
 import { dbConnection } from './db/dbConnection';
 import { allRouter } from './router/allRouter';
+import errorHandler from '../src/utilits/errorHandler';
+
 dot.config();
 const app = express();
 app.use(cors());
@@ -17,6 +19,7 @@ app.get('/test', (resq: Request, res: Response) => {
   });
 });
 
+app.use(errorHandler);
 const startServer = async (): Promise<void> => {
   try {
     await dbConnection();

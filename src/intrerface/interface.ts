@@ -26,3 +26,14 @@ export interface Authrequest extends Request {
     roles: string;
   };
 }
+
+//error handlers
+
+export interface errorInterface {
+  message: string;
+  statuscode: number;
+}
+
+export interface ErrorWithStatus extends Error {
+  statusCode?: number;
+}

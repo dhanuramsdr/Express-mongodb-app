@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Role is required'],
     enum: {
-      values: ['User', 'Admin', 'Seller'],
+      values: ['User', 'Admin', 'Seller', 'Supreadmin'],
     },
   },
 });

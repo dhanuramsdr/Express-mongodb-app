@@ -50,6 +50,68 @@ jobs:
           name: npm-audit-report
           path: audit-report.json
 
+  sonarqube:
+    name: SonarQube Code Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Create .env file
+        run: |
+          cat << EOF > .env
+          NODE_ENV=test
+          PORT=${{ vars.PORT }}
+          MONGODB_URI=${{ secrets.MONGODB_URI }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          EOF
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+
+      - name: Run tests with coverage
+        run: npm test
+        env:
+          NODE_ENV: test
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
+      - name: Verify coverage report exists
+        run: |
+          if [ -f coverage/lcov.info ]; then
+            echo "✅ Coverage report found"
+            echo "First 5 lines of coverage report:"
+            head -5 coverage/lcov.info
+          else
+            echo "⚠️ No coverage report found at coverage/lcov.info"
+            echo "Listing coverage directory contents:"
+            ls -la coverage/ || echo "Coverage directory not found"
+          fi
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v5.0.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.organization=dhanuramsdr
+            -Dsonar.projectKey=Express-mongodb-app
+            -Dsonar.projectName=Express-mongodb-app
+            -Dsonar.sources=src
+            -Dsonar.tests=tests
+            -Dsonar.test.inclusions=**/*.test.ts,**/*.spec.ts
+            -Dsonar.javascript.file.suffixes=.js,.jsx,.ts,.tsx
+            -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.coverage.exclusions=**/*.test.ts,**/*.spec.ts,**/__tests__/**,**/server.ts,**/index.ts
+            -Dsonar.exclusions=node_modules/**,dist/**,coverage/**,.git/**
+
   code-review:
     name: Code Review & Quality Check
     runs-on: ubuntu-latest
@@ -165,7 +227,7 @@ jobs:
   docker:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
-    needs: [build]
+    needs: [build, sonarqube]
     if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
 
     steps:

@@ -41,7 +41,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
       res.status(400).json({ message: 'All required fields must be provided' });
       return;
     }
-    const user = await userModel.findOne({ Email: email }).select('+Password');
+    const user = await userModel.findOne({ Email: email });
 
     if (!user) {
       res.status(400).json({ message: 'password not found' });
@@ -62,6 +62,12 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     res.status(200).json({
       message: 'jwt generated successfully',
       jwt,
+      user: {
+        id: user._id,
+        name: user.Name,
+        email: user.Email,
+        role: user.Roles,
+      },
     });
     return;
   } catch (error) {
@@ -91,6 +97,26 @@ export const getUserDetails = async (req: Authrequest, res: Response): Promise<v
     };
     res.status(200).json({
       data: userDetails,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Internal server error',
+      error,
+    });
+  }
+};
+
+export const getAllUser = async (req: Authrequest, res: Response): Promise<void> => {
+  try {
+    const result = await userModel.find().select('Name');
+    if (!result) {
+      res.status(404).json({
+        message: 'user details not found',
+      });
+      return;
+    }
+    res.status(200).json({
+      users: result,
     });
   } catch (error) {
     res.status(500).json({
