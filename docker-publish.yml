@@ -32,13 +32,29 @@ jobs:
       - name: Run TypeScript type check
         run: npx tsc --noEmit
 
+      - name: Run Linter
+        run: npm run lint || true # Won't fail the build if linting has errors
+
       - name: Build application
         run: npm run build
+
+      - name: Run SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v5.0.0
+        with:
+          args: >
+            -Dsonar.projectKey=Express-mongodb-app
+            -Dsonar.organization=dhanuramsdr
+            -Dsonar.sources=src
+            -Dsonar.javascript.file.suffixes=.js,.jsx,.ts,.tsx
+            -Dsonar.exclusions=node_modules/**,dist/**,coverage/**,.git/**
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        continue-on-error: true # Build continues even if SonarQube scan fails
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ env.DOCKER_IMAGE }}
+          username: ${{ env.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
 
       - name: Extract metadata
