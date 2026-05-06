@@ -1,3 +1,4 @@
+import express from 'express';
 import { NextFunction, Request, Response } from 'express';
 import { productModels } from '../models/productModels';
 import { HandleError } from '../utilits/errorHandler';
