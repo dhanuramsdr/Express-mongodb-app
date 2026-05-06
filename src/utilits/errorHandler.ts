@@ -1,19 +1,35 @@
-import { Request, Response, NextFunction } from 'express';
-import { errorInterface, ErrorWithStatus } from '../intrerface/interface';
+import { NextFunction, Request, Response } from 'express';
+import { ErrorWithStatus } from '../intrerface/interface';
 
-export class HandleError extends Error implements errorInterface {
-  statuscode: number;
-  constructor(message: string, statuscode: number) {
+export class HandleError extends Error {
+  statusCode: number;
+  
+  constructor(message: string, statusCode: number) {
     super(message);
-    this.statuscode = statuscode;
+    this.statusCode = statusCode;
     this.name = 'HandleError';
-    Error.captureStackTrace(this, HandleError);
   }
 }
-export default (err: ErrorWithStatus, req: Request, res: Response, next: NextFunction) => {
-  err.statusCode = err.statusCode || 500;
-  res.status(err.statusCode).json({
+
+// ✅ Fixed: Added underscore to unused 'next' parameter
+export const errorHandler = (
+  err: ErrorWithStatus,
+  req: Request,
+  res: Response,
+  _next: NextFunction  // ✅ Prefixed with underscore
+): void => {
+  const statusCode = err.statusCode || 500;
+  const message = err.message || 'Internal Server Error';
+
+  console.error(`Error: ${message}`, {
+    statusCode,
+    path: req.path,
+    method: req.method,
+  });
+
+  res.status(statusCode).json({
     success: false,
-    message: err.message,
+    message: message,
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 };

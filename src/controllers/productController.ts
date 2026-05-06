@@ -5,8 +5,27 @@ import {
   uploadMultipleImages,
   uploadSingleImage,
   getImageUrl,
-  deleteImage,
 } from '../utilits/imageUploadHelper';
+
+interface ImageUploadResult {
+  publicId: string;
+  url: string;
+}
+
+interface ProductImage {
+  publicId: string;
+  url: string;
+  thumbnail: string;
+  isPrimary: boolean;
+}
+
+    interface ProductData {
+      Productname: string;
+      Productquantity: number;
+      categorey: string;
+      seller: string;
+      images: string[];
+    }
 
 export const addProduct = async (
   req: Request,
@@ -30,7 +49,7 @@ export const addProduct = async (
     }
 
     // Prepare product data
-    const productData: any = {
+    const productData: ProductData = {
       Productname: name,
       Productquantity: Number(quantity),
       categorey: categorey,
@@ -84,12 +103,13 @@ export const addProduct = async (
         createdAt: result.createdAt,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Add product error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     res.status(500).json({
       success: false,
       message: 'Unhandled network error',
-      error: error.message,
+      error: errorMessage,
     });
   }
 };
@@ -133,11 +153,12 @@ export const getProduct = async (
       success: true,
       product: productResponse,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     res.status(500).json({
       success: false,
       message: 'Error fetching product',
-      error: error.message,
+      error: errorMessage,
     });
   }
 };
@@ -186,12 +207,13 @@ export const getAllProducts = async (
       products: transformedProducts,
       totalProducts: transformedProducts.length,
     });
-  } catch (error: any) {
+  } catch (error:unknown) {
     console.error('Error fetching all products:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     res.status(500).json({
       success: false,
       message: 'Error fetching products',
-      error: error.message,
+      error: errorMessage,
     });
   }
 };
@@ -227,10 +249,11 @@ export const getAllProductsName = async (
     });
   } catch (error: any) {
     console.error('Error fetching all products:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     res.status(500).json({
       success: false,
       message: 'Error fetching products',
-      error: error.message,
+      error: errorMessage,
     });
   }
 };

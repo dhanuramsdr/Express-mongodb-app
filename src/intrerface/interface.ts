@@ -27,8 +27,7 @@ export interface Authrequest extends Request {
   };
 }
 
-//error handlers
-
+// Error handlers
 export interface errorInterface {
   message: string;
   statuscode: number;
@@ -36,4 +35,12 @@ export interface errorInterface {
 
 export interface ErrorWithStatus extends Error {
   statusCode?: number;
+}
+
+export interface Product {
+  name: string;
+  quantity: number;
+  url?: string[];
+  categorey: string;
+  sellerid: string;
 }

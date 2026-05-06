@@ -105,15 +105,7 @@ export const uploadMultipleImages = async (
  * Helper function to delete an image from Cloudinary
  * @param publicId - The public_id of the image to delete
  */
-export const deleteImage = async (publicId: string): Promise<boolean> => {
-  try {
-    const result = await cloudinary.uploader.destroy(publicId);
-    return result.result === 'ok';
-  } catch (error) {
-    console.error('Delete error:', error);
-    return false;
-  }
-};
+
 
 /**
  * Helper function to get the full URL from a public_id

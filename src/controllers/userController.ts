@@ -26,10 +26,11 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
     res.status(200).json({
       message: 'register successfully',
     });
-  } catch (error) {
+  } catch (error:unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     res.status(500).json({
       message: 'unhandled network error',
-      error,
+      error:errorMessage
     });
   }
 };
@@ -70,10 +71,11 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
       },
     });
     return;
-  } catch (error) {
+  } catch (error:unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     res.status(500).json({
       message: 'internal server error',
-      error,
+      error:errorMessage,
     });
   }
 };
@@ -98,7 +100,8 @@ export const getUserDetails = async (req: Authrequest, res: Response): Promise<v
     res.status(200).json({
       data: userDetails,
     });
-  } catch (error) {
+  } catch (error:unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     res.status(500).json({
       message: 'Internal server error',
       error,
@@ -118,10 +121,11 @@ export const getAllUser = async (req: Authrequest, res: Response): Promise<void>
     res.status(200).json({
       users: result,
     });
-  } catch (error) {
+  } catch (error:unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     res.status(500).json({
       message: 'Internal server error',
-      error,
+      error:errorMessage,
     });
   }
 };
